@@ -1,0 +1,899 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x", "rhel-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model RelatorioRupe {
+  id               String   @id @default(uuid())
+  nome_servico     String
+  n_protocolo      String
+  taxa             String
+  contribuinte     String
+  data_solicitacao DateTime
+  situacao         String
+  moeda            String
+}
+
+model TipoImage {
+  id   String @id @default(uuid())
+  nome String @unique
+}
+
+model Actualizacoes {
+  id                String        @id @default(uuid())
+  id_usuario        String
+  id_tipo_descricao String
+  created_at        DateTime      @default(now())
+  update_at         DateTime      @updatedAt
+  tipo_descricao    TipoDescricao @relation(fields: [id_tipo_descricao], references: [id], onDelete: Cascade)
+  usuario           Usuario       @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+}
+
+model AlunoRupe {
+  id           String @id @default(uuid())
+  id_aluno     String
+  id_rupe_base String @unique
+  id_rupe      String @unique
+  aluno        Aluno  @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+  rupe         Rupes  @relation(fields: [id_rupe], references: [id], onDelete: Cascade)
+}
+
+model AlunoTurma {
+  id              String          @id @default(uuid())
+  id_aluno        String          @unique
+  id_turma        String
+  n_turma         Int
+  aluno           Aluno           @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+  turma           Turma           @relation(fields: [id_turma], references: [id], onDelete: Cascade)
+  minipautas      Minipauta[]
+  emissoes_cartao EmissaoCartao[]
+  convocatorias   Convocatoria[]
+
+  @@unique([id_aluno, id_turma])
+  @@unique([n_turma, id_turma])
+}
+
+model AreaFormacao {
+  id            String         @id @default(uuid())
+  nome          String         @unique
+  abreviacao    String         @unique
+  cursos        Curso[]
+  modelo_cartao ModeloCartao[]
+}
+
+model CargoPedagogico {
+  id           String        @id @default(uuid())
+  nome         String        @unique
+  funcionarios Funcionario[]
+  professor    Professor[]
+}
+
+model ModeloCartao {
+  id               String       @id @default(uuid())
+  nome             String
+  foto_frente      String?
+  foto_verso       String?
+  id_area_formacao String
+  created_at       DateTime     @default(now())
+  area_formacao    AreaFormacao @relation(fields: [id_area_formacao], references: [id], onDelete: Cascade)
+
+  @@unique([nome, id_area_formacao])
+}
+
+model Cartao {
+  id             String          @id @default(uuid())
+  id_aluno_turma String          @unique
+  emissoes       EmissaoCartao[]
+}
+
+model EmissaoCartao {
+  id             String  @id @default(uuid())
+  id_aluno_turma String
+  id_arquivo     String
+  via            Int
+  estado         String?
+  id_cartao      String?
+
+  data_emissao   DateTime      @default(now())
+  cartao         Cartao?       @relation(fields: [id_cartao], references: [id], onDelete: Cascade)
+  aluno_turma    AlunoTurma    @relation(fields: [id_aluno_turma], references: [id], onDelete: Cascade)
+  arquivo_cartao ArquivoCartao @relation(fields: [id_arquivo], references: [id], onDelete: Cascade)
+}
+
+model ArquivoCartao {
+  id               String          @id @default(uuid())
+  id_arquivo       String          @unique
+  arquivo          Arquivo         @relation(fields: [id_arquivo], references: [id], onDelete: Cascade)
+  emissoes_cartoes EmissaoCartao[]
+}
+
+model Convocatoria {
+  id             String   @id @default(uuid())
+  id_arquivo     String
+  id_aluno_turma String
+  data_emissao   DateTime @default(now())
+
+  aluno_turma           AlunoTurma          @relation(fields: [id_aluno_turma], references: [id], onDelete: Cascade)
+  arquivo_convocartoria ArquivoConvocatoria @relation(fields: [id_arquivo], references: [id], onDelete: Cascade)
+
+  @@unique([id_arquivo, id_aluno_turma])
+}
+
+model ArquivoConvocatoria {
+  id            String         @id @default(uuid())
+  id_arquivo    String         @unique
+  arquivo       Arquivo        @relation(fields: [id_arquivo], references: [id], onDelete: Cascade)
+  convocatorias Convocatoria[]
+}
+
+model Classe {
+  id              String               @id @default(uuid())
+  numero          Int                  @unique
+  designacao      String
+  id_ciclo        String
+  nomes_turmas    NomeTurma[]
+  cargas_horarias CargaHorariaClasse[]
+  ciclo           Ciclo                @relation(fields: [id_ciclo], references: [id], onDelete: Cascade)
+}
+
+model Ciclo {
+  id   String @id @default(uuid())
+  nome String @unique
+
+  classes Classe[]
+}
+
+model Comuna {
+  id           String    @id @default(uuid())
+  nome         String
+  id_municipio String
+  municipio    Municipio @relation(fields: [id_municipio], references: [id], onDelete: Cascade)
+  pessoas      Pessoa[]
+}
+
+model ControloEstadoExame {
+  id                    String              @id @default(uuid())
+  id_exame_especial     String
+  id_estado_exame       String
+  data_controlo         DateTime
+  estado_exame_especial EstadoExameEspecial @relation(fields: [id_estado_exame], references: [id], onDelete: Cascade)
+  exame_especial        ExameEspecial       @relation(fields: [id_exame_especial], references: [id], onDelete: Cascade)
+}
+
+model Curso {
+  id                  String            @id @default(uuid())
+  nome                String
+  id_area_formacao    String
+  codigo_curso        String            @unique
+  area_formacao       AreaFormacao      @relation(fields: [id_area_formacao], references: [id], onDelete: Cascade)
+  nomes_turmas        NomeTurma[]
+  planos_curriculares PlanoCurricular[]
+}
+
+model Descricao {
+  id                String        @id @default(uuid())
+  id_tipo_descricao String        @unique
+  conteudo          String
+  tipo_descricao    TipoDescricao @relation(fields: [id_tipo_descricao], references: [id], onDelete: Cascade)
+}
+
+model Destaque {
+  id         String   @id @default(uuid())
+  id_pessoa  String
+  id_galeria String
+  created_at DateTime @default(now())
+  galeria    Galeria  @relation(fields: [id_galeria], references: [id], onDelete: Cascade)
+  pessoa     Pessoa   @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+}
+
+model Disciplina {
+  id                 String         @id @default(uuid())
+  nome               String         @unique
+  id_tipo_disciplina String
+  abreviacao         String         @unique
+  tipo               TipoDisciplina @relation(fields: [id_tipo_disciplina], references: [id], onDelete: Cascade)
+
+  disciplinas_exames              DisciplinaExame[]
+  minipautas                      Minipauta[]
+  disciplinas_planos_curriculares DisciplinaPlanoCurricular[]
+  horarios_turma                  HorarioTurma[]
+  professor_disciplinas           ProfessorDisciplina[]
+  disciplina_deixada              DisciplinaDeixada[]
+  disciplina_eliminada            DisciplinaEliminada[]
+}
+
+model DisciplinaExame {
+  id                String        @id @default(uuid())
+  id_exame_especial String
+  id_disciplina     String
+  nota              Float
+  disciplina        Disciplina    @relation(fields: [id_disciplina], references: [id], onDelete: Cascade)
+  exame_especial    ExameEspecial @relation(fields: [id_exame_especial], references: [id], onDelete: Cascade)
+}
+
+model Email {
+  id        String @id @default(uuid())
+  id_pessoa String @unique
+  email     String
+  pessoa    Pessoa @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+}
+
+model EstadoCivil {
+  id      String   @id @default(uuid())
+  estado  String
+  pessoas Pessoa[]
+}
+
+model EstadoExameEspecial {
+  id                       String                @id @default(uuid())
+  descricao                String
+  controlos_estados_exames ControloEstadoExame[]
+  exames_especiais         ExameEspecial[]
+}
+
+model ExameEspecial {
+  id            String @id @default(uuid())
+  id_aluno      String
+  n_processo    String
+  n_turma       String
+  id_nome_turma String
+
+  n_inscricao     String
+  data_inscricao  DateTime @default(now())
+  id_estado_exame String
+  aluno           Aluno    @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+
+  estado_exame_especial    EstadoExameEspecial   @relation(fields: [id_estado_exame], references: [id], onDelete: Cascade)
+  nome_turma               NomeTurma             @relation(fields: [id_nome_turma], references: [id], onDelete: Cascade)
+  controlos_estados_exames ControloEstadoExame[]
+  disciplinas_exames       DisciplinaExame[]
+}
+
+model Funcionario {
+  id        String          @id @default(uuid())
+  id_pessoa String          @unique
+  n_agente  String          @unique
+  id_cargo  String
+  cargo     CargoPedagogico @relation(fields: [id_cargo], references: [id], onDelete: Cascade)
+  pessoa    Pessoa          @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+}
+
+model FuncionarioMed {
+  id       String  @id @default(uuid())
+  nome     String
+  id_cargo String
+  n_bi     String?
+  telefone String?
+  email    String?
+
+  cargo CargoMed @relation(fields: [id_cargo], references: [id], onDelete: Cascade)
+}
+
+model CargoMed {
+  id           String           @id @default(uuid())
+  nome         String
+  funcionarios FuncionarioMed[]
+}
+
+model Galeria {
+  id        String     @id @default(uuid())
+  image_url String     @unique
+  destaques Destaque[]
+  images    Image[]
+}
+
+model Image {
+  id         String   @id @default(uuid())
+  id_galeria String
+  descricao  String?
+  data       DateTime @default(now())
+  galeria    Galeria  @relation(fields: [id_galeria], references: [id], onDelete: Cascade)
+}
+
+model Minipauta {
+  id             String     @id @default(uuid())
+  id_aluno_turma String
+  id_disciplina  String
+  id_trimestre   String
+  p1             String?
+  p2             String?
+  p3             String?
+  aluno_turma    AlunoTurma @relation(fields: [id_aluno_turma], references: [id], onDelete: Cascade)
+  disciplina     Disciplina @relation(fields: [id_disciplina], references: [id], onDelete: Cascade)
+  trimestre      Trimestre  @relation(fields: [id_trimestre], references: [id], onDelete: Cascade)
+
+  @@unique([id_aluno_turma, id_disciplina, id_trimestre])
+}
+
+model MotivoNotificacao {
+  id           String        @id @default(uuid())
+  descricao    String
+  notificacoes Notificacao[]
+}
+
+model Municipio {
+  id           String    @id @default(uuid())
+  nome         String
+  id_provincia String
+  comunas      Comuna[]
+  provincia    Provincia @relation(fields: [id_provincia], references: [id], onDelete: Cascade)
+  pessoas      Pessoa[]
+}
+
+model NomeTurma {
+  id               String          @id @default(uuid())
+  id_curso         String
+  id_classe        String
+  turma            String
+  designacao       String          @unique
+  exames_especiais ExameEspecial[]
+  classe           Classe          @relation(fields: [id_classe], references: [id], onDelete: Cascade)
+  curso            Curso           @relation(fields: [id_curso], references: [id], onDelete: Cascade)
+  turmas           Turma[]
+}
+
+model Noticias {
+  id         String   @id @default(uuid())
+  titulo     String   @unique
+  conteudo   String
+  create_at  DateTime @default(now())
+  update_at  DateTime
+  image_url  String
+  id_usuario String
+  usuario    Usuario  @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+}
+
+model Notificacao {
+  id                    String            @id @default(uuid())
+  id_tipo_notificacao   String
+  id_motivo_notificacao String
+  data_notificacao      DateTime          @default(now())
+  assunto               String
+  descricao             String            @db.VarChar(500)
+  resposta              String?
+  motivo_notificacao    MotivoNotificacao @relation(fields: [id_motivo_notificacao], references: [id], onDelete: Cascade)
+  tipo_notificacao      TipoNotificacao   @relation(fields: [id_tipo_notificacao], references: [id], onDelete: Cascade)
+}
+
+model Periodo {
+  id     String  @id @default(uuid())
+  nome   String  @unique
+  turnos Turno[]
+}
+
+model Pessoa {
+  id              String    @id @default(uuid())
+  nome            String
+  id_municipio    String?
+  id_comuna       String?
+  id_provincia    String?
+  id_estado_civil String?
+  nome_pai        String?
+  nome_mae        String?
+  naturalidade    String?
+  altura          Float?
+  data_nascimento DateTime?
+  foto            String?
+  genero          Boolean?
+
+  aluno         Aluno?
+  usuario       Usuario?
+  funcionario   Funcionario?
+  comuna        Comuna?        @relation(fields: [id_comuna], references: [id], onDelete: Cascade)
+  estado_civil  EstadoCivil?   @relation(fields: [id_estado_civil], references: [id], onDelete: Cascade)
+  municipio     Municipio?     @relation(fields: [id_municipio], references: [id], onDelete: Cascade)
+  provincia     Provincia?     @relation(fields: [id_provincia], references: [id], onDelete: Cascade)
+  telefone      Telefone?
+  destaques     Destaque[]
+  email         Email?
+  identificacao Identificacao?
+  Professor     Professor?
+}
+
+model Identificacao {
+  id                    String            @id @default(uuid())
+  id_pessoa             String            @unique
+  data_emissao          DateTime?
+  data_validade         DateTime?
+  numero                String
+  id_tipo_identificacao String
+  pessoa                Pessoa            @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+  tipo_identificacao    TipoIdentificacao @relation(fields: [id_tipo_identificacao], references: [id], onDelete: Cascade)
+}
+
+model Arquivo {
+  id                   String               @id @default(uuid())
+  nome                 String
+  observacao           String?
+  data_upload          DateTime             @default(now())
+  id_tipo_arquivo      String
+  caminho              String
+  tipo_arquivo         TipoArquivo          @relation(fields: [id_tipo_arquivo], references: [id], onDelete: Cascade)
+  arquivo_cartao       ArquivoCartao?
+  arquivo_aluno        ArquivoAluno?
+  arquivo_convocatoria ArquivoConvocatoria?
+  arquivo_professor    ArquivoProfessor?
+
+  @@unique([nome, id_tipo_arquivo])
+}
+
+model Aluno {
+  id               String          @id @default(uuid())
+  n_processo       String          @unique
+  id_pessoa        String          @unique
+  pessoa           Pessoa          @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+  aluno_rupes      AlunoRupe[]
+  aluno_turma      AlunoTurma?
+  exames_especiais ExameEspecial[]
+  arquivos_aluno   ArquivoAluno[]
+  encarregado      Encarregado?
+}
+
+model ArquivoAluno {
+  id         String  @id @default(uuid())
+  id_arquivo String  @unique
+  id_aluno   String
+  arquivo    Arquivo @relation(fields: [id_arquivo], references: [id], onDelete: Cascade)
+  aluno      Aluno   @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model ArquivoProfessor {
+  id           String    @id @default(uuid())
+  id_arquivo   String    @unique
+  id_professor String
+  arquivo      Arquivo   @relation(fields: [id_arquivo], references: [id], onDelete: Cascade)
+  professor    Professor @relation(fields: [id_professor], references: [id], onDelete: Cascade)
+}
+
+model TipoArquivo {
+  id       String    @id @default(uuid())
+  nome     String    @unique
+  arquivos Arquivo[]
+}
+
+model TipoIdentificacao {
+  id   String @id @default(uuid())
+  nome String @unique
+
+  identificacoes Identificacao[]
+}
+
+model PlanoCurricular {
+  id       String @id @default(uuid())
+  id_curso String @unique
+
+  curso                        Curso                       @relation(fields: [id_curso], references: [id], onDelete: Cascade)
+  disciplinas_plano_curricular DisciplinaPlanoCurricular[]
+}
+
+model DisciplinaPlanoCurricular {
+  id                     String               @id @default(uuid())
+  id_plano_curricular    String
+  id_disciplina          String
+  n_ordem                Int
+  plano_curricular       PlanoCurricular      @relation(fields: [id_plano_curricular], references: [id], onDelete: Cascade)
+  disciplina             Disciplina           @relation(fields: [id_disciplina], references: [id], onDelete: Cascade)
+  cargas_horarias_classe CargaHorariaClasse[]
+}
+
+model CargaHorariaClasse {
+  id                             String @id @default(uuid())
+  id_disciplina_plano_curricular String
+  id_classe                      String
+  carga_horaria                  Int
+  classe                         Classe @relation(fields: [id_classe], references: [id], onDelete: Cascade)
+
+  disciplina_plano_curricular DisciplinaPlanoCurricular @relation(fields: [id_disciplina_plano_curricular], references: [id], onDelete: Cascade)
+}
+
+model Provincia {
+  id         String      @id @default(uuid())
+  nome       String      @unique
+  municipios Municipio[]
+  pessoas    Pessoa[]
+}
+
+model Rupes {
+  id             String     @id @default(uuid())
+  n_referencia   String     @unique
+  n_gpt          String?
+  data_expiracao DateTime?
+  situacao       String?
+  usado          Boolean    @default(false)
+  data_cadastro  DateTime   @default(now())
+  data_pagamento DateTime?
+  pago           Boolean    @default(false)
+  id_tipo_rupe   String
+  aluno_rupe     AlunoRupe?
+  tipo_rupe      TipoRupe   @relation(fields: [id_tipo_rupe], references: [id], onDelete: Cascade)
+}
+
+model Sala {
+  id         String  @id @default(uuid())
+  designacao String
+  id_sector  String
+  sector     Sector  @relation(fields: [id_sector], references: [id], onDelete: Cascade)
+  turmas     Turma[]
+
+  @@unique([designacao, id_sector])
+}
+
+model Sector {
+  id         String @id @default(uuid())
+  nome       String @unique
+  abreviacao String @unique
+  salas      Sala[]
+}
+
+model Telefone {
+  id         String     @id @default(uuid())
+  id_pessoa  String     @unique
+  numero     String
+  observacao String?
+  pessoa     Pessoa     @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+  mensagens  Mensagem[]
+}
+
+model TipoDescricao {
+  id            String          @id @default(uuid())
+  nome          String          @unique
+  actualizacoes Actualizacoes[]
+  descricao     Descricao?
+}
+
+model TipoDisciplina {
+  id              String       @id @default(uuid())
+  tipo_disciplina String
+  disciplina      Disciplina[]
+}
+
+model TipoNotificacao {
+  id           String        @id @default(uuid())
+  descricao    String
+  notificacoes Notificacao[]
+}
+
+model TipoRupe {
+  id        String  @id @default(uuid())
+  descricao String
+  valor     Float
+  rupes     Rupes[]
+}
+
+model Trimestre {
+  id         String      @id @default(uuid())
+  trimestre  String
+  minipautas Minipauta[]
+}
+
+model Turma {
+  id             String         @id @default(uuid())
+  id_nome_turma  String         @unique
+  id_turno       String
+  id_sala        String
+  is_closed      Boolean        @default(false)
+  alunos_turma   AlunoTurma[]
+  horarios_turma HorarioTurma[]
+
+  nome_turma        NomeTurma        @relation(fields: [id_nome_turma], references: [id], onDelete: Cascade)
+  sala              Sala             @relation(fields: [id_sala], references: [id], onDelete: Cascade)
+  turno             Turno            @relation(fields: [id_turno], references: [id], onDelete: Cascade)
+  director_de_turma DirectorDeTurma?
+}
+
+model Turno {
+  id         String  @id @default(uuid())
+  turno      String
+  id_periodo String
+  turmas     Turma[]
+  tempos     Tempo[]
+
+  periodo Periodo @relation(fields: [id_periodo], references: [id], onDelete: Cascade)
+}
+
+model Usuario {
+  id               String          @id @default(uuid())
+  id_pessoa        String          @unique
+  nome_usuario     String          @unique
+  foto             String?
+  password         String
+  is_master        Boolean         @default(false)
+  actualizacoes    Actualizacoes[]
+  noticias         Noticias[]
+  permissoes_telas PermissaoTela[]
+  pessoa           Pessoa          @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+}
+
+model DirectorDeTurma {
+  id           String    @id @default(uuid())
+  id_professor String
+  id_turma     String    @unique
+  professor    Professor @relation(fields: [id_professor], references: [id], onDelete: Cascade)
+  turma        Turma     @relation(fields: [id_turma], references: [id], onDelete: Cascade)
+}
+
+model Dia {
+  id             String         @id @default(uuid())
+  dia            String         @unique
+  descricao      String
+  abreviacao     String
+  horarios_turma HorarioTurma[]
+}
+
+model Encarregado {
+  id                 String @id @default(uuid())
+  id_aluno           String @unique
+  id_pessoa          String
+  id_grau_parentesco String
+  telefone           String
+  aluno              Aluno  @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model GrauParentesco {
+  id         String @id @default(uuid())
+  parentesco String @unique
+}
+
+model Tempo {
+  id        String @id @default(uuid())
+  tempo     String @unique
+  descricao String
+  inicio    String
+  fim       String
+  id_turno  String
+
+  horarios_turma HorarioTurma[]
+  turno          Turno          @relation(fields: [id_turno], references: [id], onDelete: Cascade)
+}
+
+model HorarioTurma {
+  id            String @id @default(uuid())
+  id_dia        String
+  id_tempo      String
+  id_turma      String
+  id_disciplina String
+
+  dia                       Dia                     @relation(fields: [id_dia], references: [id], onDelete: Cascade)
+  tempo                     Tempo                   @relation(fields: [id_tempo], references: [id], onDelete: Cascade)
+  turma                     Turma                   @relation(fields: [id_turma], references: [id], onDelete: Cascade)
+  disciplina                Disciplina              @relation(fields: [id_disciplina], references: [id], onDelete: Cascade)
+  horarios_turmas_professor HorarioTurmaProfessor[]
+}
+
+model Professor {
+  id                       String    @id @default(uuid())
+  id_pessoa                String    @unique
+  data_inicio_ipil         DateTime?
+  data_inicio_educacao     DateTime?
+  id_habilitacao_literaria String?
+  id_categoria             String?
+  id_regime_laboral        String?
+  id_cargo_pedagogico      String?
+  n_agente                 String    @unique
+
+  habilitacao_literaria HabilitacaoLiteraria? @relation(fields: [id_habilitacao_literaria], references: [id], onDelete: Cascade)
+  cargo_pedagogico      CargoPedagogico?      @relation(fields: [id_cargo_pedagogico], references: [id], onDelete: Cascade)
+  categoria             Categoria?            @relation(fields: [id_categoria], references: [id], onDelete: Cascade)
+  regime_laboral        RegimeLaboral?        @relation(fields: [id_regime_laboral], references: [id], onDelete: Cascade)
+  pessoa                Pessoa                @relation(fields: [id_pessoa], references: [id], onDelete: Cascade)
+  professor_disciplinas ProfessorDisciplina[]
+  director_de_turmas    DirectorDeTurma[]
+  arquivos_professor    ArquivoProfessor[]
+}
+
+model HabilitacaoLiteraria {
+  id          String      @id @default(uuid())
+  nome        String      @unique
+  professores Professor[]
+}
+
+model Categoria {
+  id          String      @id @default(uuid())
+  categoria   String      @unique
+  professores Professor[]
+}
+
+model RegimeLaboral {
+  id          String      @id @default(uuid())
+  regime      String      @unique
+  professores Professor[]
+}
+
+model ProfessorDisciplina {
+  id            String @id @default(uuid())
+  id_professor  String
+  id_disciplina String
+
+  professor                 Professor               @relation(fields: [id_professor], references: [id], onDelete: Cascade)
+  disciplina                Disciplina              @relation(fields: [id_disciplina], references: [id], onDelete: Cascade)
+  horarios_turmas_professor HorarioTurmaProfessor[]
+
+  @@unique([id_professor, id_disciplina])
+}
+
+model HorarioTurmaProfessor {
+  id                      String @id @default(uuid())
+  id_professor_disciplina String
+  id_horario_turma        String
+
+  professor_disciplina ProfessorDisciplina @relation(fields: [id_professor_disciplina], references: [id], onDelete: Cascade)
+  horario_turma        HorarioTurma        @relation(fields: [id_horario_turma], references: [id], onDelete: Cascade)
+
+  @@unique([id_professor_disciplina, id_horario_turma])
+}
+
+enum Permissao {
+  VISUALISAR
+  CRIAR
+  EDITAR
+  ELIMINAR
+}
+
+model NivelPermissaoTela {
+  id           String    @id @default(uuid())
+  id_nivel     String
+  permissao    Permissao
+  caminho_tela String
+  nivel        Nivel     @relation(fields: [id_nivel], references: [id], onDelete: Cascade)
+}
+
+model Nivel {
+  id               String               @id @default(uuid())
+  nome             String               @unique
+  descricao        String?
+  permissoes_telas NivelPermissaoTela[]
+}
+
+model PermissaoTela {
+  id           String    @id @default(uuid())
+  id_usuario   String
+  permissao    Permissao
+  caminho_tela String
+  usuario      Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+}
+
+model Mensagem {
+  id          String    @id @default(uuid())
+  id_telefone String
+  texto       String
+  created_at  DateTime? @default(now())
+  telefone    Telefone  @relation(fields: [id_telefone], references: [id], onDelete: Cascade)
+}
+
+//Models for exams
+
+model AlunoExame {
+  id                     String                @id @default(uuid())
+  nome                   String
+  n_inscricao            String                @unique
+  n_processo             String                @unique
+  n_telefone             String
+  n_bi                   String                @unique
+  genero                 String
+  data_nascimento        DateTime
+  turma                  String
+  numero_sala            Int
+  ano_lectivo            String
+  nome_pai               String?
+  nome_mae               String?
+  provincia              String?
+  curso                  String
+  pode_emitir            Boolean               @default(false)
+  notificado             Boolean               @default(false)
+  motivo_notificacao     String?
+  inscrito_em            DateTime              @default(now())
+  data_notificacao       DateTime?
+  data_suspensao         DateTime?
+  declaracao             String?
+  disciplinas_eliminadas DisciplinaEliminada[]
+  disciplinas_deixadas   DisciplinaDeixada[]
+  alunos_rupes_exames    AlunoRupeExames[]
+  reclamacoes            Reclamacao[]
+  primeiro_ano           PrimeiroAno?
+  segundo_ano            SegundoAno?
+  terceiro_ano           TerceiroAno?
+  quarto_ano             QuartoAno?
+}
+
+model PrimeiroAno {
+  id          String  @id @default(uuid())
+  id_aluno    String  @unique
+  turma       String?
+  numero      Int?
+  ano_lectivo String?
+
+  aluno_exame AlunoExame @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model SegundoAno {
+  id          String  @id @default(uuid())
+  id_aluno    String  @unique
+  turma       String?
+  numero      Int?
+  ano_lectivo String?
+
+  aluno_exame AlunoExame @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model TerceiroAno {
+  id          String  @id @default(uuid())
+  id_aluno    String  @unique
+  turma       String?
+  numero      Int?
+  ano_lectivo String?
+
+  aluno_exame AlunoExame @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model QuartoAno {
+  id          String  @id @default(uuid())
+  id_aluno    String  @unique
+  turma       String?
+  numero      Int?
+  ano_lectivo String?
+
+  aluno_exame AlunoExame @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model Reclamacao {
+  id                   String     @id @default(uuid())
+  id_aluno             String
+  id_pedido_declaracao String?
+  assunto              String
+  descricao            String     @db.VarChar(500)
+  resposta             String?    @db.VarChar(500)
+  data                 DateTime   @default(now())
+  data_resposta        DateTime?
+  aluno_exame          AlunoExame @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model RupesExames {
+  id               String           @id @default(uuid())
+  rupe             String           @unique
+  gpt              String
+  usado            Boolean          @default(false)
+  valor            Float            @default(500)
+  obs              String?
+  data_validade    DateTime
+  aluno_rupe_exame AlunoRupeExames?
+}
+
+model AlunoRupeExames {
+  id           String   @id @default(uuid())
+  id_aluno     String
+  id_rupe_base String
+  id_rupe      String   @unique
+  pago         Boolean  @default(false)
+  afirma       Boolean  @default(false)
+  data_criacao DateTime @default(now())
+
+  data_pagamento DateTime?
+
+  aluno_exame AlunoExame  @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+  rupe_exame  RupesExames @relation(fields: [id_rupe], references: [id], onDelete: Cascade)
+}
+
+model DisciplinaDeixada {
+  id            String @id @default(uuid())
+  id_disciplina String
+  nota          Float
+  id_aluno      String
+
+  disciplina  Disciplina @relation(fields: [id_disciplina], references: [id], onDelete: Cascade)
+  aluno_exame AlunoExame @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}
+
+model DisciplinaEliminada {
+  id            String @id @default(uuid())
+  id_disciplina String
+  nota          Float
+  id_aluno      String
+
+  disciplina  Disciplina @relation(fields: [id_disciplina], references: [id], onDelete: Cascade)
+  aluno_exame AlunoExame @relation(fields: [id_aluno], references: [id], onDelete: Cascade)
+}

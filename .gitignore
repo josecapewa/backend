@@ -1,0 +1,8 @@
+node_modules
+prisma/migrations
+.env
+src/server/uploads/*
+.vscode/
+.idea/
+uploads/
+dist/
