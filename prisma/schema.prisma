@@ -9,15 +9,15 @@ datasource db {
 }
 
 model Usuario {
-  id                String @id @default(uuid())
+  id                String  @id @default(uuid())
   nome              String
-  email             String @unique
-  email_recuperacao String
+  email             String  @unique
+  email_recuperacao String?
   senha             String
   telefone          String
-  pontos            Int
-  imagem            String
-  tipo              String @default("comum")
+  pontos            Int     @default(0)
+  foto              String?
+  tipo              String  @default("comum")
 
   trocas         Troca[]
   cartao_usuario CartaoUsuario?
