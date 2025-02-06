@@ -66,7 +66,7 @@ model Beneficio {
 
 model Categoria {
   id         String      @id @default(uuid())
-  nome       String
+  nome       String      @unique
   descricao  String
   beneficios Beneficio[]
 }

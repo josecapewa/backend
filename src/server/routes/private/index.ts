@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { authService } from "../../../modules/services/auth";
 import { benefits } from "./benefit.routes";
+import { categories } from "./category.routes";
 
 /**
  * Registers private routes for the Fastify application.
@@ -31,5 +32,6 @@ export default async function privateRoutes(app: FastifyInstance) {
     privateApp.addHook("preHandler", authService.authenticate);
     privateApp.delete("/logout", authService.logout);
     await benefits(privateApp);
+    await categories(privateApp);
   });
 }
