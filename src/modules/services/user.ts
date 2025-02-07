@@ -16,7 +16,7 @@ class UserService extends BaseService {
 
     const hashedPassword = await hashService.hashPassword(userData.senha);
     if (await userModel.getByEmail(userData.email)) {
-      throw new AppError("Nome de usuário já cadastrado", 400);
+      throw new AppError("Email já em uso na plataforma.", 400);
     }
 
     const user = await userModel.create({
