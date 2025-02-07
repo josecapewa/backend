@@ -166,16 +166,16 @@ class AuthService {
         req.body
       );
 
-      const user = await userModel.getData(identification);
+      const user = await userModel.getByEmail(identification);
 
       if (
         !user ||
-        !(await hashService.comparePassword(password, user.password))
+        !(await hashService.comparePassword(password, user.senha))
       ) {
         throw new AppError("Credenciais inválidas", 401);
       }
 
-      const payload = { id: user.id, username: user.nome_usuario };
+      const payload = { id: user.id, name: user.nome };
 
       const token = req.jwt.sign(payload);
 
@@ -187,7 +187,7 @@ class AuthService {
         maxAge: Number(process.env.JWT_EXPIRES_IN!),
       });
 
-      const { password: pwd, ...userData } = user;
+      const { senha: pwd, ...userData } = user;
       console.log(userData);
       return res.send(userData);
     } catch (error) {
@@ -215,7 +215,7 @@ class AuthService {
       if (!userData) {
         throw new AppError("Usuário não encontrado", 404);
       }
-      const { password: pwd, ...dataToSend } = userData;
+      const { senha: pwd, ...dataToSend } = userData;
       return res.send(dataToSend);
     } catch (err) {
       console.error("Erro na autenticação:", err);

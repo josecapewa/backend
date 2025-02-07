@@ -3,7 +3,7 @@ import { angolanPhoneSchema, nonEmptyString, permissionSchema } from ".";
 
 class UserValidations {
   getData = z.object({
-    nome: nonEmptyString("Introduza o nome"),
+    nome: nonEmptyString  ("Introduza o nome"),
     telefone: angolanPhoneSchema,
     email: nonEmptyString().email("Introduza um email válido"),
     email_recuperacao: z.string().email("Introduza um email válido").optional(),

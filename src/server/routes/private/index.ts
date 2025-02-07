@@ -3,6 +3,7 @@ import { authService } from "../../../modules/services/auth";
 import { benefits } from "./benefit.routes";
 import { categories } from "./category.routes";
 import { cards } from "./card.routes";
+import { users } from "./user.routes";
 
 /**
  * Registers private routes for the Fastify application.
@@ -35,5 +36,6 @@ export default async function privateRoutes(app: FastifyInstance) {
     await benefits(privateApp);
     await categories(privateApp);
     await cards(privateApp);
+    await users(privateApp)
   });
 }

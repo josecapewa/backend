@@ -3,5 +3,5 @@ import { BaseRoute } from "../base";
 import { benefitService } from "@/modules/services/benefit";
 
 export async function benefits(app: FastifyInstance) {
-    await BaseRoute.handle(app, benefitService, "/benefits");
+    await BaseRoute.handle(app, benefitService, "benefits");
 }
